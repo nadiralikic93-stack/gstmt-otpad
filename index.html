@@ -14,7 +14,7 @@
     --light:   #D6EAD8;
     --yellow:  #FFFDE7;
     --orange:  #FFF3E0;
-    --red:     #8B0000;
+    --red:     #7B1717;
     --white:   #FFFFFF;
     --grey:    #F5F5F5;
     --border:  #C8E6C9;
@@ -44,7 +44,6 @@
   .tab:hover:not(.active) { color: white; background: rgba(255,255,255,.1); }
 
   main { max-width: 1100px; margin: 0 auto; padding: 20px; }
-
   .panel { display: none; }
   .panel.active { display: block; }
 
@@ -58,7 +57,7 @@
     padding: 10px 16px; font-weight: 700; font-size: 12px;
     display: flex; align-items: center; gap: 8px;
   }
-  .card-header .badge {
+  .badge {
     background: var(--gold); color: white;
     border-radius: 10px; padding: 1px 8px; font-size: 10px;
   }
@@ -66,7 +65,7 @@
 
   .meta-grid {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px; margin-bottom: 16px;
+    gap: 10px; margin-bottom: 4px;
   }
   .meta-field label {
     display: block; font-size: 10px; font-weight: 700;
@@ -82,6 +81,17 @@
   .meta-field input:focus { outline: none; border-color: var(--green2); }
   .meta-field.full { grid-column: 1 / -1; }
 
+  /* SECTION DIVIDERS IN TABLE */
+  .section-row td {
+    background: var(--green) !important;
+    color: white !important;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 5px 10px !important;
+  }
+
   .waste-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .waste-table th {
     background: var(--green); color: white;
@@ -89,15 +99,15 @@
     font-size: 10px; font-weight: 700; white-space: nowrap;
   }
   .waste-table td { padding: 6px 8px; border-bottom: 1px solid #E8F5E9; vertical-align: middle; }
-  .waste-table tr:nth-child(even) td { background: #FAFAFA; }
-  .waste-table tr.haz td { background: #FFF8F0; }
-  .waste-table tr.haz:nth-child(even) td { background: #FFF0E0; }
-  .waste-table tr:hover td { background: #E8F5E9 !important; }
+  .waste-table tr.normal:nth-child(odd) td  { background: #FAFAFA; }
+  .waste-table tr.normal:nth-child(even) td { background: white; }
+  .waste-table tr.haz td   { background: #FFF5F0; }
+  .waste-table tr:hover:not(.section-row) td { background: #E8F5E9 !important; }
 
   .waste-name { font-weight: 600; }
   .waste-name.haz { color: var(--red); }
   .haz-badge {
-    display: inline-block; background: #FF5722; color: white;
+    display: inline-block; background: #C62828; color: white;
     font-size: 9px; padding: 1px 5px; border-radius: 3px;
     margin-left: 4px; vertical-align: middle;
   }
@@ -105,6 +115,9 @@
     background: var(--light); color: var(--green);
     border-radius: 4px; padding: 2px 6px; font-size: 10px;
     font-weight: 700; white-space: nowrap;
+  }
+  .code-badge.haz {
+    background: #FFEBEE; color: var(--red);
   }
   .unit-badge { color: #666; font-size: 10px; font-weight: 600; }
 
@@ -115,13 +128,13 @@
     font-family: inherit; transition: border-color .2s;
   }
   .qty-input:focus { outline: none; border-color: var(--green2); }
-  .qty-input.haz { background: var(--orange); }
+  .qty-input.haz { background: #FFF3E0; border-color: #FFCCBC; }
   .qty-input.filled { border-color: var(--green3); background: #F1F8E9; }
+  .qty-input.haz.filled { border-color: #FF7043; background: #FBE9E7; }
 
   .napomena-input {
     width: 100%; border: 1px solid #DDD; border-radius: 4px;
-    padding: 4px 7px; font-size: 11px; font-family: inherit;
-    background: #FAFAFA;
+    padding: 4px 7px; font-size: 11px; font-family: inherit; background: #FAFAFA;
   }
   .napomena-input:focus { outline: none; border-color: var(--green2); }
 
@@ -158,18 +171,14 @@
   .hist-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
   .hist-table th {
     background: var(--green2); color: white;
-    padding: 8px 10px; text-align: left; font-size: 10px;
-    font-weight: 700; white-space: nowrap;
+    padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 700; white-space: nowrap;
   }
   .hist-table td { padding: 6px 10px; border-bottom: 1px solid #EEE; vertical-align: middle; }
   .hist-table tr:nth-child(even) td { background: #F9F9F9; }
   .hist-table tr:hover td { background: #E8F5E9; }
   .hist-empty { text-align: center; color: #999; padding: 40px; font-style: italic; }
 
-  .filter-bar {
-    display: flex; gap: 10px; align-items: center;
-    flex-wrap: wrap; margin-bottom: 14px;
-  }
+  .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filter-bar input, .filter-bar select {
     border: 1.5px solid var(--border); border-radius: 5px;
     padding: 6px 10px; font-size: 12px; font-family: inherit;
@@ -178,9 +187,8 @@
 
   .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
   .stat-card {
-    background: white; border-radius: 8px;
-    padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
-    border-left: 4px solid var(--green2);
+    background: white; border-radius: 8px; padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); border-left: 4px solid var(--green2);
   }
   .stat-card .val { font-size: 22px; font-weight: 700; color: var(--green); }
   .stat-card .lbl { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
@@ -203,7 +211,7 @@
     <h1>GS – Tvornica Mašina Travnik d.o.o.</h1>
     <span>Upravljanje otpadom — Modul za najavu odvoza</span>
   </div>
-  <span style="font-size:11px;opacity:.6">v1.0 · 2025</span>
+  <span style="font-size:11px;opacity:.6">v1.1 · 2025</span>
 </header>
 
 <div class="tabs">
@@ -261,12 +269,12 @@
         <thead>
           <tr>
             <th style="width:34px">Rb.</th>
-            <th style="text-align:left;min-width:220px">Vrsta otpada</th>
+            <th style="text-align:left;min-width:240px">Vrsta otpada</th>
             <th>Šifra</th>
             <th>Stanje</th>
             <th>Jed.</th>
             <th style="min-width:120px">Planirana količina</th>
-            <th style="text-align:left;min-width:180px">Napomena za stavku</th>
+            <th style="text-align:left;min-width:180px">Napomena</th>
           </tr>
         </thead>
         <tbody id="wasteBody"></tbody>
@@ -289,7 +297,6 @@
     <div class="stat-card"><div class="val" id="statOvaMjesec">0</div><div class="lbl">Ovaj mjesec</div></div>
     <div class="stat-card"><div class="val" id="statVrsta">—</div><div class="lbl">Najčešći otpad</div></div>
   </div>
-
   <div class="card">
     <div class="card-header">Historija odvoza</div>
     <div class="card-body">
@@ -331,46 +338,57 @@
 <div id="toast"></div>
 
 <script>
+// ── Waste list ────────────────────────────────────────────────────────────
 const WASTE = [
-  {name:"Miješani komunalni otpad",             code:"20 03 01",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"Čelik – komadno željezo",              code:"17 04 05",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"Strugotine metala (špena)",            code:"12 01 01",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"Ogorina",                              code:"10 02 10",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"Papir i karton",                       code:"20 01 01",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"Jestiva ulja i masti",                code:"20 01 25",  state:"Tečno", unit:"l",  haz:false},
-  {name:"Emulzije i rastvori bez halogena",    code:"12 01 09*", state:"Tečno", unit:"l",  haz:true},
-  {name:"Ambalaža onečišćena opasnim tvarima", code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
-  {name:"Vodene suspenzije s bojama/lakovima", code:"08 01 19*", state:"Tečno", unit:"l",  haz:true},
-  {name:"Apsorbensi i zaštitna odjeća – opasni",code:"15 02 02*",state:"Čvrst", unit:"kg", haz:true},
-  {name:"Nehlorirana hidraulička ulja",         code:"13 01 13*", state:"Tečno", unit:"l",  haz:true},
-  {name:"Stara farba",                          code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
-  {name:"Otpadne gume",                         code:"16 01 03",  state:"Čvrst", unit:"kg", haz:false},
-  {name:"EE otpad",                             code:"20 01 36",  state:"Čvrst", unit:"kg", haz:false},
+  // Opasni otpad
+  {name:"Emulzije i rastvori bez halogena",      code:"12 01 09*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Ambalaža onečišćena opasnim tvarima",   code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
+  {name:"Vodene suspenzije s bojama/lakovima",   code:"08 01 19*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Apsorbensi i zaštitna odjeća – opasni", code:"15 02 02*", state:"Čvrst", unit:"kg", haz:true},
+  {name:"Nehlorirana hidraulička ulja",           code:"13 01 13*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Stara farba",                            code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
+  // Neopasni posebni
+  {name:"Otpadne gume",                           code:"16 01 03",  state:"Čvrst", unit:"kg", haz:false},
+  {name:"EE otpad",                               code:"20 01 36",  state:"Čvrst", unit:"kg", haz:false},
+  {name:"Miješani komunalni otpad",               code:"20 03 01",  state:"Čvrst", unit:"kg", haz:false},
 ];
 
-const STORAGE_KEY = "gstmt_otpad_v1";
+// Section breaks: before index 6 and 9 (0-based)
+const SECTIONS = {
+  0: "⚠  Opasni otpad",
+  6: "Ostali otpad",
+};
+
+const STORAGE_KEY = "gstmt_otpad_v2";
 let historija = [];
 
 function load() {
   try { historija = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { historija = []; }
 }
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(historija));
-}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(historija)); }
 
+// ── Build waste table ─────────────────────────────────────────────────────
 function buildWasteTable() {
   const tbody = document.getElementById("wasteBody");
   tbody.innerHTML = "";
+  let rb = 1;
   WASTE.forEach((w, i) => {
+    // Section header
+    if (SECTIONS[i] !== undefined) {
+      const sr = document.createElement("tr");
+      sr.className = "section-row";
+      sr.innerHTML = `<td colspan="7">${SECTIONS[i]}</td>`;
+      tbody.appendChild(sr);
+    }
     const tr = document.createElement("tr");
-    if (w.haz) tr.classList.add("haz");
+    tr.className = w.haz ? "haz" : "normal";
     tr.innerHTML = `
-      <td class="rb" style="text-align:center">${i+1}</td>
+      <td class="rb" style="text-align:center">${rb++}</td>
       <td>
         <span class="waste-name ${w.haz?'haz':''}">${w.name}</span>
         ${w.haz ? '<span class="haz-badge">⚠ OPASNI</span>' : ''}
       </td>
-      <td style="text-align:center"><span class="code-badge">${w.code}</span></td>
+      <td style="text-align:center"><span class="code-badge ${w.haz?'haz':''}">${w.code}</span></td>
       <td style="text-align:center">${w.state}</td>
       <td style="text-align:center" class="unit-badge">${w.unit}</td>
       <td style="text-align:center">
@@ -395,6 +413,7 @@ function updateFilledCount() {
   document.getElementById("filledCount").textContent = `${n} popunjeno`;
 }
 
+// ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(name, el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
@@ -407,6 +426,7 @@ function initDates() {
   document.getElementById("datumNajave").value = new Date().toISOString().split("T")[0];
 }
 
+// ── Dodaj u historiju ─────────────────────────────────────────────────────
 function dodajUHistoriju() {
   const datumOdvoza = document.getElementById("datumOdvoza").value;
   if (!datumOdvoza) { toast("⚠️ Unesite planirani datum odvoza!", true); return; }
@@ -429,6 +449,7 @@ function dodajUHistoriju() {
         id: Date.now() + i,
         ...meta,
         vrsta: w.name, sifra: w.code, stanje: w.state, jedinica: w.unit,
+        opasan: w.haz,
         kolicina: qty,
         napomena: [meta.napGlobal, document.getElementById(`nap_${i}`).value.trim()].filter(Boolean).join(" | "),
       });
@@ -455,6 +476,7 @@ function resetujFormu() {
   updateFilledCount();
 }
 
+// ── Render historija ──────────────────────────────────────────────────────
 function renderHistorija() {
   const q    = document.getElementById("filterText").value.toLowerCase();
   const god  = document.getElementById("filterGodina").value;
@@ -469,7 +491,6 @@ function renderHistorija() {
   const tbody = document.getElementById("histBody");
   const empty = document.getElementById("histEmpty");
   tbody.innerHTML = "";
-
   if (filtered.length === 0) { empty.style.display = "block"; return; }
   empty.style.display = "none";
 
@@ -479,8 +500,11 @@ function renderHistorija() {
       <td class="rb" style="text-align:center">${idx+1}</td>
       <td style="white-space:nowrap">${fmtDate(r.datumNajave)}</td>
       <td style="white-space:nowrap">${fmtDate(r.datumOdvoza)}</td>
-      <td><strong>${r.vrsta}</strong></td>
-      <td style="text-align:center"><span class="code-badge">${r.sifra}</span></td>
+      <td>
+        <strong>${r.vrsta}</strong>
+        ${r.opasan ? '<span class="haz-badge">⚠</span>' : ''}
+      </td>
+      <td style="text-align:center"><span class="code-badge ${r.opasan?'haz':''}">${r.sifra}</span></td>
       <td style="text-align:center" class="unit-badge">${r.jedinica}</td>
       <td style="text-align:right;font-weight:700;color:var(--green)">${fmtNum(r.kolicina)}</td>
       <td>${r.operater||'—'}</td>
@@ -497,7 +521,6 @@ function obrisiRed(id) {
   historija = historija.filter(r => r.id !== id);
   save(); renderHistorija(); updateStats();
 }
-
 function obrisiSve() {
   if (!confirm("Obrisati SVU historiju? Ova akcija se ne može poništiti.")) return;
   historija = []; save(); renderHistorija(); updateStats();
@@ -506,96 +529,319 @@ function obrisiSve() {
 function updateStats() {
   document.getElementById("statUkupno").textContent = historija.length;
   const m = new Date().toISOString().slice(0,7);
-  document.getElementById("statOvaMjesec").textContent = historija.filter(r => (r.datumOdvoza||"").startsWith(m)).length;
+  document.getElementById("statOvaMjesec").textContent = historija.filter(r=>(r.datumOdvoza||"").startsWith(m)).length;
   const freq = {};
-  historija.forEach(r => { freq[r.vrsta] = (freq[r.vrsta]||0) + 1; });
+  historija.forEach(r => { freq[r.vrsta] = (freq[r.vrsta]||0)+1; });
   const top = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById("statVrsta").textContent = top ? top[0].split("–")[0].trim() : "—";
+  document.getElementById("statVrsta").textContent = top ? top[0].split("–")[0].trim().split(" ").slice(0,2).join(" ") : "—";
 }
 
 function updateFilterOptions() {
   const years = [...new Set(historija.map(r=>(r.datumOdvoza||"").slice(0,4)).filter(Boolean))].sort().reverse();
-  const selG = document.getElementById("filterGodina");
-  const curG = selG.value;
+  const selG = document.getElementById("filterGodina"); const curG = selG.value;
   selG.innerHTML = '<option value="">Sve godine</option>';
   years.forEach(y => selG.innerHTML += `<option value="${y}" ${curG===y?'selected':''}>${y}</option>`);
-
   const vrste = [...new Set(historija.map(r=>r.vrsta))].sort();
-  const selV = document.getElementById("filterVrsta");
-  const curV = selV.value;
+  const selV = document.getElementById("filterVrsta"); const curV = selV.value;
   selV.innerHTML = '<option value="">Sve vrste</option>';
   vrste.forEach(v => selV.innerHTML += `<option value="${v}" ${curV===v?'selected':''}>${v}</option>`);
 }
 
+// ── Excel export – NAJAVA (samo popunjene stavke) ─────────────────────────
 function izvesiExcel() {
   const d = {
-    datumNajave:  document.getElementById("datumNajave").value,
-    datumOdvoza:  document.getElementById("datumOdvoza").value,
-    kontakt:      document.getElementById("kontakt").value,
-    telefon:      document.getElementById("telefon").value,
-    operater:     document.getElementById("operater").value,
-    lokacija:     document.getElementById("lokacija").value,
-    napomena:     document.getElementById("napomenaGlobal").value,
+    datumNajave: document.getElementById("datumNajave").value,
+    datumOdvoza: document.getElementById("datumOdvoza").value,
+    kontakt:     document.getElementById("kontakt").value,
+    telefon:     document.getElementById("telefon").value,
+    operater:    document.getElementById("operater").value,
+    lokacija:    document.getElementById("lokacija").value,
+    napomena:    document.getElementById("napomenaGlobal").value,
   };
 
-  const rows = [
-    ["GS – TVORNICA MAŠINA TRAVNIK d.o.o."],
-    ["NAJAVA ODVOZA OTPADA"],
-    [],
-    ["Datum najave:", d.datumNajave, "", "Datum odvoza:", d.datumOdvoza],
-    ["Kontakt osoba:", d.kontakt,    "", "Telefon/e-mail:", d.telefon],
-    ["Ovlašteni operater:", d.operater, "", "Lokacija:", d.lokacija],
-    ["Napomena:", d.napomena],
-    [],
-    ["Rb.", "Vrsta otpada", "Šifra otpada", "Fizičko stanje", "Jed. mjere", "Planirana količina", "Napomena"],
-  ];
+  // Collect only filled rows
+  const filled = WASTE.map((w, i) => ({
+    ...w, i,
+    qty: parseFloat(document.getElementById(`qty_${i}`)?.value || 0),
+    nap: document.getElementById(`nap_${i}`)?.value || ""
+  })).filter(r => r.qty > 0);
 
-  WASTE.forEach((w, i) => {
-    const qty = parseFloat(document.getElementById(`qty_${i}`)?.value || 0);
-    const nap = document.getElementById(`nap_${i}`)?.value || "";
-    rows.push([i+1, w.name, w.code, w.state, w.unit, qty > 0 ? qty : "", nap]);
-  });
+  if (filled.length === 0) { toast("⚠️ Nema unesenih količina za izvoz!", true); return; }
 
-  rows.push([], ["Odgovorna osoba (ime i potpis):", "", "", "", "Datum i pečat:"], ["______________________________", "", "", "", "______________________________"]);
-
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:5},{wch:40},{wch:12},{wch:12},{wch:8},{wch:16},{wch:30}];
   const wb = XLSX.utils.book_new();
+
+  // ── Build styled worksheet data ──
+  // We'll use aoa then apply styles via SheetJS cell objects
+  const GREEN   = "1A4731";
+  const GREEN2  = "2E7D52";
+  const GOLD    = "C9A84C";
+  const YELLOW  = "FFFDE7";
+  const ORANGE  = "FFF3E0";
+  const HAZRED  = "7B1717";
+  const WHITE   = "FFFFFF";
+  const LGREY   = "F5F5F5";
+  const LGREEN  = "D6EAD8";
+
+  const ws = {};
+  let r = 0; // 0-indexed row
+
+  function setCell(row, col, value, style) {
+    const addr = XLSX.utils.encode_cell({r: row, c: col});
+    ws[addr] = { v: value, t: typeof value === 'number' ? 'n' : 's', s: style };
+  }
+
+  function hdrStyle(bg, fc, bold, sz, halign) {
+    return { font: {name:"Calibri", bold:bold||false, color:{rgb:fc||WHITE}, sz:sz||10},
+             fill: {fgColor:{rgb:bg||GREEN}, patternType:"solid"},
+             alignment: {horizontal:halign||"center", vertical:"center", wrapText:true},
+             border: allBorder("CCCCCC") };
+  }
+  function allBorder(c) {
+    const s = {style:"thin", color:{rgb:c||"CCCCCC"}};
+    return {top:s, bottom:s, left:s, right:s};
+  }
+
+  // Row 0: Company header (merged A:G)
+  for (let c=0; c<7; c++) {
+    setCell(r, c, c===0 ? "GS – TVORNICA MAŠINA TRAVNIK d.o.o." : "",
+      {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:14},
+       fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+       alignment:{horizontal:"center",vertical:"center"},
+       border:allBorder(GREEN)});
+  }
+  r++;
+
+  // Row 1: Doc title
+  for (let c=0; c<7; c++) {
+    setCell(r, c, c===0 ? "NAJAVA ODVOZA OTPADA" : "",
+      {font:{name:"Calibri",bold:true,color:{rgb:GOLD},sz:12},
+       fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+       alignment:{horizontal:"center",vertical:"center"},
+       border:allBorder(GREEN)});
+  }
+  r++;
+
+  // Row 2: spacer
+  for (let c=0; c<7; c++) setCell(r, c, "", {fill:{fgColor:{rgb:LGREEN},patternType:"solid"}});
+  r++;
+
+  // Meta rows
+  function metaRow(label1, val1, label2, val2) {
+    const lStyle = {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},
+                    fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+                    alignment:{horizontal:"left",vertical:"center",indent:1},
+                    border:allBorder("AAAAAA")};
+    const vStyle = {font:{name:"Calibri",sz:9},
+                    fill:{fgColor:{rgb:YELLOW},patternType:"solid"},
+                    alignment:{horizontal:"left",vertical:"center",indent:1},
+                    border:allBorder("AAAAAA")};
+    setCell(r, 0, label1, lStyle);
+    setCell(r, 1, val1||"", vStyle);
+    setCell(r, 2, "", vStyle);
+    setCell(r, 3, label2||"", label2 ? lStyle : vStyle);
+    setCell(r, 4, val2||"", vStyle);
+    setCell(r, 5, "", vStyle);
+    setCell(r, 6, "", vStyle);
+    r++;
+  }
+
+  metaRow("Datum najave:", d.datumNajave, "Datum odvoza:", d.datumOdvoza);
+  metaRow("Kontakt osoba:", d.kontakt, "Telefon / e-mail:", d.telefon);
+  metaRow("Ovlašteni operater:", d.operater, "Lokacija preuzimanja:", d.lokacija);
+  metaRow("Napomena:", d.napomena, "", "");
+  r++; // spacer
+
+  // Table header
+  const tHdrs = ["Rb.", "Vrsta otpada", "Šifra otpada", "Fiz. stanje", "Jed. mjere", "Planirana količina", "Napomena"];
+  tHdrs.forEach((h, c) => {
+    setCell(r, c, h, hdrStyle(GREEN, WHITE, true, 9, c===1||c===6?"left":"center"));
+  });
+  r++;
+
+  // Separate haz and non-haz filled rows
+  const hazFilled    = filled.filter(x => x.haz);
+  const nonHazFilled = filled.filter(x => !x.haz);
+
+  function dataRow(item, rb, isHaz) {
+    const base = isHaz ? ORANGE : (rb%2===0 ? "F5F5F5" : WHITE);
+    const bs = allBorder("CCCCCC");
+    const baseStyle = (halign) => ({
+      font:{name:"Calibri", sz:9, color:{rgb:isHaz&&rb<=1?"000000":"000000"}},
+      fill:{fgColor:{rgb:base}, patternType:"solid"},
+      alignment:{horizontal:halign||"center", vertical:"center"},
+      border:bs
+    });
+    setCell(r, 0, rb, baseStyle("center"));
+    const nameStyle = {...baseStyle("left"), font:{name:"Calibri",sz:9,bold:isHaz,color:{rgb:isHaz?HAZRED:"000000"}}};
+    setCell(r, 1, item.name + (isHaz ? " ⚠" : ""), nameStyle);
+    setCell(r, 2, item.code, baseStyle("center"));
+    setCell(r, 3, item.state, baseStyle("center"));
+    setCell(r, 4, item.unit, baseStyle("center"));
+    const qtyStyle = {...baseStyle("right"), font:{name:"Calibri",sz:9,bold:true,color:{rgb:isHaz?HAZRED:GREEN}},
+                      numFmt:"#,##0.00"};
+    ws[XLSX.utils.encode_cell({r, c:5})] = {v:item.qty, t:'n', s:qtyStyle, z:"#,##0.00"};
+    setCell(r, 6, item.nap||"", baseStyle("left"));
+    r++;
+  }
+
+  // Section: Opasni otpad
+  if (hazFilled.length > 0) {
+    for (let c=0; c<7; c++) {
+      setCell(r, c, c===0 ? "⚠  OPASNI OTPAD" : "",
+        {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9,italic:false},
+         fill:{fgColor:{rgb:"7B1717"},patternType:"solid"},
+         alignment:{horizontal:c===0?"left":"center",vertical:"center"},
+         border:allBorder("7B1717")});
+    }
+    r++;
+    hazFilled.forEach((item, idx) => dataRow(item, idx+1, true));
+  }
+
+  // Section: Ostali otpad
+  if (nonHazFilled.length > 0) {
+    for (let c=0; c<7; c++) {
+      setCell(r, c, c===0 ? "OSTALI OTPAD" : "",
+        {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},
+         fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+         alignment:{horizontal:c===0?"left":"center",vertical:"center"},
+         border:allBorder(GREEN2)});
+    }
+    r++;
+    nonHazFilled.forEach((item, idx) => dataRow(item, idx+1, false));
+  }
+
+  r++; // spacer
+
+  // Signature row
+  const sigStyle = {font:{name:"Calibri",bold:true,sz:9,color:{rgb:GREEN}},
+                    fill:{fgColor:{rgb:LGREEN},patternType:"solid"},
+                    alignment:{horizontal:"left",vertical:"center",indent:1},
+                    border:allBorder("CCCCCC")};
+  const sigLineStyle = {font:{name:"Calibri",sz:9,color:{rgb:"999999"}},
+                        fill:{fgColor:{rgb:WHITE},patternType:"solid"},
+                        alignment:{horizontal:"center",vertical:"center"},
+                        border:allBorder("EEEEEE")};
+  setCell(r, 0, "Odgovorna osoba GS-TMT (ime i potpis):", sigStyle);
+  for(let c=1;c<4;c++) setCell(r,c,"",sigStyle);
+  setCell(r, 4, "Datum i pečat:", sigStyle);
+  for(let c=5;c<7;c++) setCell(r,c,"",sigStyle);
+  r++;
+  setCell(r, 0, "______________________________", sigLineStyle);
+  for(let c=1;c<4;c++) setCell(r,c,"",sigLineStyle);
+  setCell(r, 4, "______________________________", sigLineStyle);
+  for(let c=5;c<7;c++) setCell(r,c,"",sigLineStyle);
+
+  // Merges
+  const merges = [
+    {s:{r:0,c:0},e:{r:0,c:6}}, {s:{r:1,c:0},e:{r:1,c:6}}, {s:{r:2,c:0},e:{r:2,c:6}},
+  ];
+  ws['!merges'] = merges;
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:r,c:6}});
+  ws['!cols'] = [{wch:5},{wch:40},{wch:13},{wch:12},{wch:8},{wch:16},{wch:30}];
+  ws['!rows'] = [{hpt:28},{hpt:22},{hpt:8}];
+
   XLSX.utils.book_append_sheet(wb, ws, "Najava odvoza");
   XLSX.writeFile(wb, `GS-TMT_Najava_${d.datumOdvoza||d.datumNajave||"nova"}.xlsx`);
   toast("📥 Excel fajl preuzet!");
 }
 
+// ── Excel export – HISTORIJA ──────────────────────────────────────────────
 function izvesiHistorijuExcel() {
   if (!historija.length) { toast("Nema podataka za izvoz!", true); return; }
-  const rows = [
-    ["GS – TVORNICA MAŠINA TRAVNIK d.o.o. — Historija odvoza otpada"],
-    [],
-    ["Datum najave","Datum odvoza","Vrsta otpada","Šifra","Stanje","Jed.","Količina","Operater","Kontakt","Napomena"],
-    ...historija.map(r => [r.datumNajave, r.datumOdvoza, r.vrsta, r.sifra, r.stanje, r.jedinica, r.kolicina, r.operater||"", r.kontakt||"", r.napomena||""])
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:13},{wch:13},{wch:40},{wch:12},{wch:10},{wch:6},{wch:12},{wch:28},{wch:18},{wch:30}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Historija");
-  XLSX.writeFile(wb, `GS-TMT_Historija_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+  const GREEN  = "1A4731";
+  const GREEN2 = "2E7D52";
+  const GOLD   = "C9A84C";
+  const WHITE  = "FFFFFF";
+  const ORANGE = "FFF3E0";
+  const HAZRED = "7B1717";
+  const LGREEN = "D6EAD8";
+
+  function allBorder(c) {
+    const s = {style:"thin",color:{rgb:c||"CCCCCC"}};
+    return {top:s,bottom:s,left:s,right:s};
+  }
+
+  const ws = {};
+  let r = 0;
+  function sc(row, col, value, style) {
+    ws[XLSX.utils.encode_cell({r:row,c:col})] = {v:value, t:typeof value==='number'?'n':'s', s:style};
+  }
+
+  // Title
+  const titleS = {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:13},
+                  fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+                  alignment:{horizontal:"center",vertical:"center"},
+                  border:allBorder(GREEN)};
+  for(let c=0;c<10;c++) sc(r,c,c===0?"GS-TMT – Historija odvoza otpada":"",titleS);
+  r++;
+
+  const subS = {font:{name:"Calibri",italic:true,color:{rgb:GREEN},sz:9},
+                fill:{fgColor:{rgb:LGREEN},patternType:"solid"},
+                alignment:{horizontal:"left",vertical:"center",indent:1},
+                border:allBorder("CCCCCC")};
+  for(let c=0;c<10;c++) sc(r,c,c===0?`Izvezeno: ${fmtDate(new Date().toISOString().split("T")[0])} · Ukupno unosa: ${historija.length}`:"",subS);
+  r++;
+  r++; // spacer
+
+  const hdrs = ["Rb.","Datum najave","Datum odvoza","Vrsta otpada","Šifra","Jed.","Količina","Operater","Kontakt","Napomena"];
+  const hw = [5,13,13,40,13,7,13,28,18,30];
+  hdrs.forEach((h, c) => {
+    sc(r, c, h, {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},
+                 fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+                 alignment:{horizontal:c===3||c===9?"left":"center",vertical:"center",wrapText:true},
+                 border:allBorder(GREEN2)});
+  });
+  r++;
+
+  historija.forEach((rec, idx) => {
+    const isHaz = rec.opasan;
+    const base  = isHaz ? ORANGE : (idx%2===0?"F5F5F5":"FFFFFF");
+    const bs    = allBorder("DDDDDD");
+    const cs = (halign,bold,fc) => ({
+      font:{name:"Calibri",sz:9,bold:!!bold,color:{rgb:fc||"212121"}},
+      fill:{fgColor:{rgb:base},patternType:"solid"},
+      alignment:{horizontal:halign||"center",vertical:"center"},
+      border:bs
+    });
+    sc(r,0,idx+1,cs("center"));
+    sc(r,1,rec.datumNajave||"",cs("center"));
+    sc(r,2,rec.datumOdvoza||"",cs("center"));
+    sc(r,3,rec.vrsta+(isHaz?" ⚠":""),{...cs("left",true,isHaz?HAZRED:"1A4731")});
+    sc(r,4,rec.sifra,{...cs("center",false,isHaz?HAZRED:GREEN2)});
+    sc(r,5,rec.jedinica,cs("center"));
+    ws[XLSX.utils.encode_cell({r,c:6})] = {v:rec.kolicina,t:'n',
+      s:{...cs("right",true,isHaz?HAZRED:GREEN)}, z:"#,##0.00"};
+    sc(r,7,rec.operater||"—",cs("left"));
+    sc(r,8,rec.kontakt||"—",cs("left"));
+    sc(r,9,rec.napomena||"—",{...cs("left"),font:{name:"Calibri",sz:9,italic:true,color:{rgb:"666666"}}});
+    r++;
+  });
+
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:r-1,c:9}});
+  ws['!cols'] = hw.map(w=>({wch:w}));
+  ws['!rows'] = [{hpt:28},{hpt:16}];
+
+  const wbk = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbk, ws, "Historija");
+  XLSX.writeFile(wbk, `GS-TMT_Historija_${new Date().toISOString().slice(0,10)}.xlsx`);
   toast("📥 Historija izvezena u Excel!");
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return "—";
   const [y,m,day] = d.split("-");
   return `${day}.${m}.${y}`;
 }
 function fmtNum(n) {
-  return Number(n).toLocaleString("bs-BA", {minimumFractionDigits:2, maximumFractionDigits:2});
+  return Number(n).toLocaleString("bs-BA",{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function toast(msg, err=false) {
   const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.style.background = err ? "#C62828" : "var(--green)";
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3200);
+  t.textContent = msg; t.style.background = err?"#C62828":"var(--green)";
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3200);
 }
 
 load(); buildWasteTable(); initDates(); updateFilledCount();
