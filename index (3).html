@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GS-TMT | Najava odvoza otpada</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @media print {
+    @page { size: A4; margin: 12mm 10mm; }
+    body { background: white !important; font-size: 11px; }
+    header, .tabs, .btn-row, .filter-bar, .stats-row, .del-btn,
+    #tab-historija, #toast, .badge { display: none !important; }
+    main { padding: 0 !important; max-width: 100% !important; }
+    .card { box-shadow: none !important; margin-bottom: 8px !important; border: 1px solid #CCC; }
+    .card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .waste-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section-row td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .waste-table tr.haz td { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #FFF5F0 !important; }
+    .meta-field input { background: #FFFDE7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border: 1px solid #CCC !important; }
+    .qty-input { background: #FFFDE7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .qty-input.haz { background: #FFF3E0 !important; }
+    .panel { display: block !important; }
+    #tab-historija { display: none !important; }
+    #print-header { display: block !important; }
+    #print-signature { display: block !important; }
+  }
+</style>
+<style>
+  :root {
+    --green:   #1A4731;
+    --green2:  #2E7D52;
+    --green3:  #4CAF50;
+    --gold:    #C9A84C;
+    --light:   #D6EAD8;
+    --yellow:  #FFFDE7;
+    --orange:  #FFF3E0;
+    --red:     #7B1717;
+    --white:   #FFFFFF;
+    --grey:    #F5F5F5;
+    --border:  #C8E6C9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #ECEFF1; color: #212121; font-size: 13px; }
+
+  header {
+    background: var(--green);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid var(--gold);
+  }
+  header h1 { font-size: 15px; font-weight: 700; letter-spacing: .3px; }
+  header span { font-size: 11px; opacity: .7; }
+
+  .tabs { display: flex; background: var(--green); padding: 0 24px; gap: 4px; }
+  .tab {
+    padding: 10px 20px; cursor: pointer; color: rgba(255,255,255,.6);
+    border-radius: 6px 6px 0 0; font-size: 12px; font-weight: 600;
+    transition: all .2s; border: none; background: none;
+  }
+  .tab.active { background: #ECEFF1; color: var(--green); }
+  .tab:hover:not(.active) { color: white; background: rgba(255,255,255,.1); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: white; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .card-header {
+    background: var(--green); color: white;
+    padding: 10px 16px; font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .badge {
+    background: var(--gold); color: white;
+    border-radius: 10px; padding: 1px 8px; font-size: 10px;
+  }
+  .card-body { padding: 16px; }
+
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-bottom: 4px;
+  }
+  .meta-field label {
+    display: block; font-size: 10px; font-weight: 700;
+    color: var(--green); text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 4px;
+  }
+  .meta-field input {
+    width: 100%; border: 1.5px solid var(--border);
+    border-radius: 5px; padding: 7px 10px;
+    font-size: 12px; background: var(--yellow);
+    font-family: inherit; transition: border-color .2s;
+  }
+  .meta-field input:focus { outline: none; border-color: var(--green2); }
+  .meta-field.full { grid-column: 1 / -1; }
+
+  /* SECTION DIVIDERS IN TABLE */
+  .section-row td {
+    background: var(--green) !important;
+    color: white !important;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 5px 10px !important;
+  }
+
+  .waste-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .waste-table th {
+    background: var(--green); color: white;
+    padding: 8px 10px; text-align: center;
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+  }
+  .waste-table td { padding: 6px 8px; border-bottom: 1px solid #E8F5E9; vertical-align: middle; }
+  .waste-table tr.normal:nth-child(odd) td  { background: #FAFAFA; }
+  .waste-table tr.normal:nth-child(even) td { background: white; }
+  .waste-table tr.haz td   { background: #FFF5F0; }
+  .waste-table tr:hover:not(.section-row) td { background: #E8F5E9 !important; }
+
+  .waste-name { font-weight: 600; }
+  .waste-name.haz { color: var(--red); }
+  .haz-badge {
+    display: inline-block; background: #C62828; color: white;
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .code-badge {
+    background: var(--light); color: var(--green);
+    border-radius: 4px; padding: 2px 6px; font-size: 10px;
+    font-weight: 700; white-space: nowrap;
+  }
+  .code-badge.haz {
+    background: #FFEBEE; color: var(--red);
+  }
+  .unit-badge { color: #666; font-size: 10px; font-weight: 600; }
+
+  .qty-input {
+    width: 110px; border: 1.5px solid var(--border);
+    border-radius: 5px; padding: 5px 8px;
+    font-size: 12px; text-align: right; background: var(--yellow);
+    font-family: inherit; transition: border-color .2s;
+  }
+  .qty-input:focus { outline: none; border-color: var(--green2); }
+  .qty-input.haz { background: #FFF3E0; border-color: #FFCCBC; }
+  .qty-input.filled { border-color: var(--green3); background: #F1F8E9; }
+  .qty-input.haz.filled { border-color: #FF7043; background: #FBE9E7; }
+
+  .napomena-input {
+    width: 100%; border: 1px solid #DDD; border-radius: 4px;
+    padding: 4px 7px; font-size: 11px; font-family: inherit; background: #FAFAFA;
+  }
+  .napomena-input:focus { outline: none; border-color: var(--green2); }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: none; border-radius: 6px; padding: 10px 18px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: var(--green2); }
+  .btn-success { background: #388E3C; color: white; }
+  .btn-success:hover { background: #2E7D32; }
+  .btn-gold { background: var(--gold); color: white; }
+  .btn-gold:hover { background: #B8960A; }
+  .btn-outline { background: white; color: var(--green); border: 2px solid var(--green); }
+  .btn-outline:hover { background: var(--light); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green); color: white;
+    padding: 12px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    transform: translateY(80px); opacity: 0;
+    transition: all .3s; z-index: 999;
+    border-left: 4px solid var(--gold);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  .hist-wrap { overflow-x: auto; }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+  .hist-table th {
+    background: var(--green2); color: white;
+    padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 700; white-space: nowrap;
+  }
+  .hist-table td { padding: 6px 10px; border-bottom: 1px solid #EEE; vertical-align: middle; }
+  .hist-table tr:nth-child(even) td { background: #F9F9F9; }
+  .hist-table tr:hover td { background: #E8F5E9; }
+  .hist-empty { text-align: center; color: #999; padding: 40px; font-style: italic; }
+
+  .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .filter-bar input, .filter-bar select {
+    border: 1.5px solid var(--border); border-radius: 5px;
+    padding: 6px 10px; font-size: 12px; font-family: inherit;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--green2); }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card {
+    background: white; border-radius: 8px; padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); border-left: 4px solid var(--green2);
+  }
+  .stat-card .val { font-size: 22px; font-weight: 700; color: var(--green); }
+  .stat-card .lbl { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+  .rb { color: #999; font-size: 11px; }
+  .del-btn { background: none; border: none; cursor: pointer; color: #CCC; font-size: 14px; padding: 2px 6px; border-radius: 3px; }
+  .del-btn:hover { color: #D32F2F; background: #FFEBEE; }
+
+  @media (max-width: 700px) {
+    .meta-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    main { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>GS – Tvornica Mašina Travnik d.o.o.</h1>
+    <span>Upravljanje otpadom — Modul za najavu odvoza</span>
+  </div>
+  <span style="font-size:11px;opacity:.6">v1.1 · 2025</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('najava', this)">📋 Nova najava</button>
+  <button class="tab" onclick="switchTab('historija', this)">🗂️ Historija odvoza</button>
+</div>
+
+<main>
+
+<!-- TAB: NAJAVA -->
+<div id="tab-najava" class="panel active">
+  <div class="card">
+    <div class="card-header">Podaci o pošiljci</div>
+    <div class="card-body">
+      <div class="meta-grid">
+        <div class="meta-field">
+          <label>Datum najave</label>
+          <input type="date" id="datumNajave">
+        </div>
+        <div class="meta-field">
+          <label>Planirani datum odvoza</label>
+          <input type="date" id="datumOdvoza">
+        </div>
+        <div class="meta-field">
+          <label>Kontakt osoba (GS-TMT)</label>
+          <input type="text" id="kontakt" placeholder="Ime i prezime">
+        </div>
+        <div class="meta-field">
+          <label>Telefon / e-mail</label>
+          <input type="text" id="telefon" placeholder="Kontakt info">
+        </div>
+        <div class="meta-field">
+          <label>Ovlašteni operater</label>
+          <input type="text" id="operater" placeholder="Naziv firme operatera">
+        </div>
+        <div class="meta-field">
+          <label>Lokacija preuzimanja</label>
+          <input type="text" id="lokacija" value="GS-TMT, Travnik">
+        </div>
+        <div class="meta-field full">
+          <label>Napomena uz narudžbu</label>
+          <input type="text" id="napomenaGlobal" placeholder="Opcionalna napomena za operatera...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      Vrste otpada
+      <span class="badge" id="filledCount">0 popunjeno</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="waste-table">
+        <thead>
+          <tr>
+            <th style="width:34px">Rb.</th>
+            <th style="text-align:left;min-width:240px">Vrsta otpada</th>
+            <th>Šifra</th>
+            <th>Stanje</th>
+            <th>Jed.</th>
+            <th style="min-width:120px">Planirana količina</th>
+            <th style="text-align:left;min-width:180px">Napomena</th>
+          </tr>
+        </thead>
+        <tbody id="wasteBody"></tbody>
+      </table>
+    </div>
+    <div class="card-body">
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="dodajUHistoriju()">✅ Dodaj u historiju</button>
+        <button class="btn btn-primary" onclick="stampajPDF()">📄 Izvezi u PDF</button>
+        <button class="btn btn-gold" onclick="izvesiExcel()">📊 Izvezi u Excel</button>
+        <button class="btn btn-outline" onclick="resetujFormu()">🔄 Resetuj formu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: HISTORIJA -->
+<div id="tab-historija" class="panel">
+  <div class="stats-row">
+    <div class="stat-card"><div class="val" id="statUkupno">0</div><div class="lbl">Ukupno unosa</div></div>
+    <div class="stat-card"><div class="val" id="statOvaMjesec">0</div><div class="lbl">Ovaj mjesec</div></div>
+    <div class="stat-card"><div class="val" id="statVrsta">—</div><div class="lbl">Najčešći otpad</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">Historija odvoza</div>
+    <div class="card-body">
+      <div class="filter-bar">
+        <input type="text" id="filterText" placeholder="🔍 Pretraži..." oninput="renderHistorija()" style="width:200px">
+        <select id="filterGodina" onchange="renderHistorija()"><option value="">Sve godine</option></select>
+        <select id="filterVrsta" onchange="renderHistorija()"><option value="">Sve vrste</option></select>
+        <button class="btn btn-gold btn-sm" onclick="stampajHistorijuPDF()">📄 Izvezi u PDF</button>
+        <button class="btn btn-primary btn-sm" onclick="izvesiHistorijuExcel()">📊 Izvezi u Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="obrisiSve()">🗑️ Obriši sve</button>
+      </div>
+      <div class="hist-wrap">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th style="width:30px">Rb.</th>
+              <th>Datum najave</th>
+              <th>Datum odvoza</th>
+              <th>Vrsta otpada</th>
+              <th>Šifra</th>
+              <th>Jed.</th>
+              <th style="text-align:right">Količina</th>
+              <th>Operater</th>
+              <th>Kontakt</th>
+              <th>Napomena</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+        <div id="histEmpty" class="hist-empty" style="display:none">
+          Nema podataka u historiji.<br>Unesite prvu najavu i kliknite "Dodaj u historiju".
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+// ── Waste list ────────────────────────────────────────────────────────────
+const WASTE = [
+  // Opasni otpad
+  {name:"Emulzije i rastvori bez halogena",      code:"12 01 09*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Ambalaža onečišćena opasnim tvarima",   code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
+  {name:"Vodene suspenzije s bojama/lakovima",   code:"08 01 19*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Apsorbensi i zaštitna odjeća – opasni", code:"15 02 02*", state:"Čvrst", unit:"kg", haz:true},
+  {name:"Nehlorirana hidraulička ulja",           code:"13 01 13*", state:"Tečno", unit:"l",  haz:true},
+  {name:"Stara farba",                            code:"15 01 10*", state:"Čvrst", unit:"kg", haz:true},
+  // Neopasni posebni
+  {name:"Otpadne gume",                           code:"16 01 03",  state:"Čvrst", unit:"kg", haz:false},
+  {name:"EE otpad",                               code:"20 01 36",  state:"Čvrst", unit:"kg", haz:false},
+  {name:"Miješani komunalni otpad",               code:"20 03 01",  state:"Čvrst", unit:"kg", haz:false},
+];
+
+// Section breaks: before index 6 and 9 (0-based)
+const SECTIONS = {
+  0: "⚠  Opasni otpad",
+  6: "Ostali otpad",
+};
+
+const STORAGE_KEY = "gstmt_otpad_v2";
+let historija = [];
+
+function load() {
+  try { historija = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { historija = []; }
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(historija)); }
+
+// ── Build waste table ─────────────────────────────────────────────────────
+function buildWasteTable() {
+  const tbody = document.getElementById("wasteBody");
+  tbody.innerHTML = "";
+  let rb = 1;
+  WASTE.forEach((w, i) => {
+    // Section header
+    if (SECTIONS[i] !== undefined) {
+      const sr = document.createElement("tr");
+      sr.className = "section-row";
+      sr.innerHTML = `<td colspan="7">${SECTIONS[i]}</td>`;
+      tbody.appendChild(sr);
+    }
+    const tr = document.createElement("tr");
+    tr.className = w.haz ? "haz" : "normal";
+    tr.innerHTML = `
+      <td class="rb" style="text-align:center">${rb++}</td>
+      <td>
+        <span class="waste-name ${w.haz?'haz':''}">${w.name}</span>
+        ${w.haz ? '<span class="haz-badge">⚠ OPASNI</span>' : ''}
+      </td>
+      <td style="text-align:center"><span class="code-badge ${w.haz?'haz':''}">${w.code}</span></td>
+      <td style="text-align:center">${w.state}</td>
+      <td style="text-align:center" class="unit-badge">${w.unit}</td>
+      <td style="text-align:center">
+        <input class="qty-input ${w.haz?'haz':''}" type="number" min="0" step="0.01"
+          id="qty_${i}" placeholder="0.00" oninput="onQtyChange(${i})">
+      </td>
+      <td><input class="napomena-input" type="text" id="nap_${i}" placeholder="—"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function onQtyChange(i) {
+  const inp = document.getElementById(`qty_${i}`);
+  const val = parseFloat(inp.value);
+  inp.classList.toggle("filled", val > 0);
+  updateFilledCount();
+}
+
+function updateFilledCount() {
+  const n = WASTE.filter((_, i) => parseFloat(document.getElementById(`qty_${i}`)?.value||0) > 0).length;
+  document.getElementById("filledCount").textContent = `${n} popunjeno`;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById(`tab-${name}`).classList.add("active");
+  if (name === "historija") { renderHistorija(); updateStats(); updateFilterOptions(); }
+}
+
+function initDates() {
+  document.getElementById("datumNajave").value = new Date().toISOString().split("T")[0];
+}
+
+// ── Dodaj u historiju ─────────────────────────────────────────────────────
+function dodajUHistoriju() {
+  const datumOdvoza = document.getElementById("datumOdvoza").value;
+  if (!datumOdvoza) { toast("⚠️ Unesite planirani datum odvoza!", true); return; }
+
+  const meta = {
+    datumNajave:  document.getElementById("datumNajave").value,
+    datumOdvoza,
+    kontakt:      document.getElementById("kontakt").value.trim(),
+    telefon:      document.getElementById("telefon").value.trim(),
+    operater:     document.getElementById("operater").value.trim(),
+    lokacija:     document.getElementById("lokacija").value.trim(),
+    napGlobal:    document.getElementById("napomenaGlobal").value.trim(),
+  };
+
+  let added = 0;
+  WASTE.forEach((w, i) => {
+    const qty = parseFloat(document.getElementById(`qty_${i}`).value || 0);
+    if (qty > 0) {
+      historija.unshift({
+        id: Date.now() + i,
+        ...meta,
+        vrsta: w.name, sifra: w.code, stanje: w.state, jedinica: w.unit,
+        opasan: w.haz,
+        kolicina: qty,
+        napomena: [meta.napGlobal, document.getElementById(`nap_${i}`).value.trim()].filter(Boolean).join(" | "),
+      });
+      added++;
+    }
+  });
+
+  if (added === 0) { toast("⚠️ Nema unesenih količina!", true); return; }
+  save();
+  toast(`✅ Dodano ${added} stavki u historiju!`);
+  resetujFormu();
+  updateFilterOptions();
+}
+
+function resetujFormu() {
+  document.getElementById("datumNajave").value = new Date().toISOString().split("T")[0];
+  ["datumOdvoza","napomenaGlobal"].forEach(id => document.getElementById(id).value = "");
+  WASTE.forEach((_, i) => {
+    const q = document.getElementById(`qty_${i}`);
+    const n = document.getElementById(`nap_${i}`);
+    if (q) { q.value = ""; q.classList.remove("filled"); }
+    if (n) n.value = "";
+  });
+  updateFilledCount();
+}
+
+// ── Render historija ──────────────────────────────────────────────────────
+function renderHistorija() {
+  const q    = document.getElementById("filterText").value.toLowerCase();
+  const god  = document.getElementById("filterGodina").value;
+  const vrst = document.getElementById("filterVrsta").value;
+
+  const filtered = historija.filter(r =>
+    (!q    || r.vrsta.toLowerCase().includes(q) || (r.operater||"").toLowerCase().includes(q) || (r.napomena||"").toLowerCase().includes(q)) &&
+    (!god  || (r.datumOdvoza||"").startsWith(god)) &&
+    (!vrst || r.vrsta === vrst)
+  );
+
+  const tbody = document.getElementById("histBody");
+  const empty = document.getElementById("histEmpty");
+  tbody.innerHTML = "";
+  if (filtered.length === 0) { empty.style.display = "block"; return; }
+  empty.style.display = "none";
+
+  filtered.forEach((r, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="rb" style="text-align:center">${idx+1}</td>
+      <td style="white-space:nowrap">${fmtDate(r.datumNajave)}</td>
+      <td style="white-space:nowrap">${fmtDate(r.datumOdvoza)}</td>
+      <td>
+        <strong>${r.vrsta}</strong>
+        ${r.opasan ? '<span class="haz-badge">⚠</span>' : ''}
+      </td>
+      <td style="text-align:center"><span class="code-badge ${r.opasan?'haz':''}">${r.sifra}</span></td>
+      <td style="text-align:center" class="unit-badge">${r.jedinica}</td>
+      <td style="text-align:right;font-weight:700;color:var(--green)">${fmtNum(r.kolicina)}</td>
+      <td>${r.operater||'—'}</td>
+      <td>${r.kontakt||'—'}</td>
+      <td style="color:#666;font-size:10px">${r.napomena||'—'}</td>
+      <td><button class="del-btn" onclick="obrisiRed(${r.id})" title="Obriši">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function obrisiRed(id) {
+  if (!confirm("Obrisati ovaj unos iz historije?")) return;
+  historija = historija.filter(r => r.id !== id);
+  save(); renderHistorija(); updateStats();
+}
+function obrisiSve() {
+  if (!confirm("Obrisati SVU historiju? Ova akcija se ne može poništiti.")) return;
+  historija = []; save(); renderHistorija(); updateStats();
+}
+
+function updateStats() {
+  document.getElementById("statUkupno").textContent = historija.length;
+  const m = new Date().toISOString().slice(0,7);
+  document.getElementById("statOvaMjesec").textContent = historija.filter(r=>(r.datumOdvoza||"").startsWith(m)).length;
+  const freq = {};
+  historija.forEach(r => { freq[r.vrsta] = (freq[r.vrsta]||0)+1; });
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById("statVrsta").textContent = top ? top[0].split("–")[0].trim().split(" ").slice(0,2).join(" ") : "—";
+}
+
+function updateFilterOptions() {
+  const years = [...new Set(historija.map(r=>(r.datumOdvoza||"").slice(0,4)).filter(Boolean))].sort().reverse();
+  const selG = document.getElementById("filterGodina"); const curG = selG.value;
+  selG.innerHTML = '<option value="">Sve godine</option>';
+  years.forEach(y => selG.innerHTML += `<option value="${y}" ${curG===y?'selected':''}>${y}</option>`);
+  const vrste = [...new Set(historija.map(r=>r.vrsta))].sort();
+  const selV = document.getElementById("filterVrsta"); const curV = selV.value;
+  selV.innerHTML = '<option value="">Sve vrste</option>';
+  vrste.forEach(v => selV.innerHTML += `<option value="${v}" ${curV===v?'selected':''}>${v}</option>`);
+}
+
+// ── PDF print – NAJAVA ────────────────────────────────────────────────────
+function stampajPDF() {
+  const filled = WASTE.map((w, i) => ({
+    ...w, i,
+    qty: parseFloat(document.getElementById(`qty_${i}`)?.value || 0),
+    nap: document.getElementById(`nap_${i}`)?.value || ""
+  })).filter(r => r.qty > 0);
+
+  if (filled.length === 0) { toast("⚠️ Nema unesenih količina za izvoz!", true); return; }
+
+  const d = {
+    datumNajave: document.getElementById("datumNajave").value,
+    datumOdvoza: document.getElementById("datumOdvoza").value,
+    kontakt:     document.getElementById("kontakt").value,
+    telefon:     document.getElementById("telefon").value,
+    operater:    document.getElementById("operater").value,
+    lokacija:    document.getElementById("lokacija").value,
+    napomena:    document.getElementById("napomenaGlobal").value,
+  };
+
+  const hazFilled    = filled.filter(x => x.haz);
+  const nonHazFilled = filled.filter(x => !x.haz);
+
+  function tableRows(items, isHaz) {
+    return items.map((w, idx) => `
+      <tr style="background:${isHaz ? '#FFF5F0' : (idx%2===0?'#FAFAFA':'white')}">
+        <td style="text-align:center;color:#999">${idx+1}</td>
+        <td style="font-weight:600;color:${isHaz?'#7B1717':'#212121'}">${w.name}${isHaz?' <span style="background:#C62828;color:white;font-size:8px;padding:1px 4px;border-radius:2px">⚠</span>':''}</td>
+        <td style="text-align:center"><span style="background:${isHaz?'#FFEBEE':'#D6EAD8'};color:${isHaz?'#7B1717':'#1A4731'};padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">${w.code}</span></td>
+        <td style="text-align:center">${w.state}</td>
+        <td style="text-align:center;color:#666">${w.unit}</td>
+        <td style="text-align:right;font-weight:700;color:${isHaz?'#7B1717':'#1A4731'}">${w.qty.toLocaleString('bs-BA',{minimumFractionDigits:2})}</td>
+        <td style="color:#555;font-size:10px">${w.nap||'—'}</td>
+      </tr>`).join('');
+  }
+
+  function sectionHeader(label, bg) {
+    return `<tr><td colspan="7" style="background:${bg};color:white;font-weight:700;font-size:9px;letter-spacing:.8px;padding:5px 8px;text-transform:uppercase">${label}</td></tr>`;
+  }
+
+  const tableBody =
+    (hazFilled.length    ? sectionHeader("⚠  Opasni otpad", "#7B1717") + tableRows(hazFilled, true) : '') +
+    (nonHazFilled.length ? sectionHeader("Ostali otpad", "#2E7D52") + tableRows(nonHazFilled, false) : '');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page { size: A4; margin: 12mm 10mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #212121; }
+    .header { background: #1A4731; color: white; padding: 12px 16px; border-bottom: 3px solid #C9A84C; }
+    .header h1 { font-size: 14px; font-weight: 700; }
+    .header h2 { font-size: 10px; color: #C9A84C; margin-top: 3px; font-weight: 600; letter-spacing: .5px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 10px 0; border: 1px solid #C8E6C9; border-radius: 5px; overflow: hidden; }
+    .meta-row { display: contents; }
+    .meta-label { background: #2E7D52; color: white; padding: 5px 8px; font-size: 9px; font-weight: 700; }
+    .meta-val   { background: #FFFDE7; padding: 5px 8px; font-size: 10px; border-bottom: 1px solid #E0E0E0; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
+    th { background: #1A4731; color: white; padding: 7px 8px; text-align: center; font-size: 9px; font-weight: 700; }
+    th:nth-child(2), th:last-child { text-align: left; }
+    td { padding: 5px 8px; border-bottom: 1px solid #E8F5E9; vertical-align: middle; }
+    .sig { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sig-box { border-top: 2px solid #1A4731; padding-top: 6px; }
+    .sig-label { font-size: 9px; font-weight: 700; color: #1A4731; }
+    .sig-line { margin-top: 16px; border-bottom: 1px solid #999; }
+    .footer { margin-top: 14px; font-size: 8px; color: #999; text-align: center; border-top: 1px solid #EEE; padding-top: 6px; }
+  </style></head><body>
+  <div class="header">
+    <h1>GS – Tvornica Mašina Travnik d.o.o.</h1>
+    <h2>NAJAVA ODVOZA OTPADA</h2>
+  </div>
+  <div class="meta">
+    <div class="meta-label">Datum najave</div><div class="meta-val">${fmtDate(d.datumNajave)||'—'}</div>
+    <div class="meta-label">Planirani datum odvoza</div><div class="meta-val">${fmtDate(d.datumOdvoza)||'—'}</div>
+    <div class="meta-label">Kontakt osoba</div><div class="meta-val">${d.kontakt||'—'}</div>
+    <div class="meta-label">Telefon / e-mail</div><div class="meta-val">${d.telefon||'—'}</div>
+    <div class="meta-label">Ovlašteni operater</div><div class="meta-val">${d.operater||'—'}</div>
+    <div class="meta-label">Lokacija preuzimanja</div><div class="meta-val">${d.lokacija||'—'}</div>
+    ${d.napomena ? `<div class="meta-label">Napomena</div><div class="meta-val">${d.napomena}</div>` : ''}
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:30px">Rb.</th>
+      <th style="min-width:180px;text-align:left">Vrsta otpada</th>
+      <th>Šifra</th><th>Stanje</th><th>Jed.</th>
+      <th style="text-align:right">Količina</th>
+      <th style="text-align:left">Napomena</th>
+    </tr></thead>
+    <tbody>${tableBody}</tbody>
+  </table>
+  <div class="sig">
+    <div class="sig-box"><div class="sig-label">Odgovorna osoba GS-TMT (ime i potpis)</div><div class="sig-line"></div></div>
+    <div class="sig-box"><div class="sig-label">Datum i pečat</div><div class="sig-line"></div></div>
+  </div>
+  <div class="footer">GS – Tvornica Mašina Travnik d.o.o. · Dokument generisan: ${new Date().toLocaleDateString('bs-BA')}</div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.print(); };
+}
+
+// ── PDF print – HISTORIJA ─────────────────────────────────────────────────
+function stampajHistorijuPDF() {
+  if (!historija.length) { toast("Nema podataka za izvoz!", true); return; }
+
+  const rows = historija.map((r, idx) => `
+    <tr style="background:${r.opasan?'#FFF5F0':(idx%2===0?'#FAFAFA':'white')}">
+      <td style="text-align:center;color:#999">${idx+1}</td>
+      <td style="white-space:nowrap">${fmtDate(r.datumNajave)}</td>
+      <td style="white-space:nowrap">${fmtDate(r.datumOdvoza)}</td>
+      <td style="font-weight:600;color:${r.opasan?'#7B1717':'#1A4731'}">${r.vrsta}${r.opasan?' ⚠':''}</td>
+      <td style="text-align:center"><span style="background:${r.opasan?'#FFEBEE':'#D6EAD8'};color:${r.opasan?'#7B1717':'#1A4731'};padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700">${r.sifra}</span></td>
+      <td style="text-align:center;color:#666">${r.jedinica}</td>
+      <td style="text-align:right;font-weight:700;color:${r.opasan?'#7B1717':'#1A4731'}">${Number(r.kolicina).toLocaleString('bs-BA',{minimumFractionDigits:2})}</td>
+      <td>${r.operater||'—'}</td>
+      <td>${r.kontakt||'—'}</td>
+      <td style="color:#666;font-size:9px">${r.napomena||'—'}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page { size: A4 landscape; margin: 10mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9px; color: #212121; }
+    .header { background: #1A4731; color: white; padding: 10px 14px; border-bottom: 3px solid #C9A84C; margin-bottom: 10px; }
+    .header h1 { font-size: 13px; font-weight: 700; }
+    .header h2 { font-size: 9px; color: #C9A84C; margin-top: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 9px; }
+    th { background: #2E7D52; color: white; padding: 6px 7px; text-align: center; font-size: 8px; font-weight: 700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    td { padding: 4px 7px; border-bottom: 1px solid #EEE; vertical-align: middle; }
+    .footer { margin-top: 10px; font-size: 8px; color: #999; text-align: center; border-top: 1px solid #EEE; padding-top: 5px; }
+  </style></head><body>
+  <div class="header">
+    <h1>GS – Tvornica Mašina Travnik d.o.o.</h1>
+    <h2>HISTORIJA ODVOZA OTPADA · Ukupno: ${historija.length} unosa · Izvezeno: ${new Date().toLocaleDateString('bs-BA')}</h2>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Rb.</th><th>Datum najave</th><th>Datum odvoza</th>
+      <th style="text-align:left;min-width:140px">Vrsta otpada</th>
+      <th>Šifra</th><th>Jed.</th><th>Količina</th>
+      <th style="text-align:left">Operater</th>
+      <th style="text-align:left">Kontakt</th>
+      <th style="text-align:left">Napomena</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">GS – Tvornica Mašina Travnik d.o.o. · Dokument generisan: ${new Date().toLocaleDateString('bs-BA')}</div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.print(); };
+}
+
+// ── Excel export – NAJAVA ──────────────────────────────────────────────────
+function izvesiExcel() {
+  const filled = WASTE.map((w, i) => ({
+    ...w, i,
+    qty: parseFloat(document.getElementById(`qty_${i}`)?.value || 0),
+    nap: document.getElementById(`nap_${i}`)?.value || ""
+  })).filter(r => r.qty > 0);
+
+  if (filled.length === 0) { toast("⚠️ Nema unesenih količina za izvoz!", true); return; }
+
+  const d = {
+    datumNajave: document.getElementById("datumNajave").value,
+    datumOdvoza: document.getElementById("datumOdvoza").value,
+    kontakt:     document.getElementById("kontakt").value,
+    telefon:     document.getElementById("telefon").value,
+    operater:    document.getElementById("operater").value,
+    lokacija:    document.getElementById("lokacija").value,
+    napomena:    document.getElementById("napomenaGlobal").value,
+  };
+
+  const GREEN="1A4731", GREEN2="2E7D52", GOLD="C9A84C", YELLOW="FFFDE7",
+        ORANGE="FFF3E0", HAZRED="7B1717", WHITE="FFFFFF", LGREEN="D6EAD8";
+
+  const ws = {};
+  let r = 0;
+  function sc(row, col, value, style) {
+    ws[XLSX.utils.encode_cell({r:row,c:col})] = {v:value, t:typeof value==='number'?'n':'s', s:style};
+  }
+  function bd(c) { const s={style:"thin",color:{rgb:c||"CCCCCC"}}; return {top:s,bottom:s,left:s,right:s}; }
+
+  for (let c=0;c<7;c++) sc(r,c,c===0?"GS – TVORNICA MAŠINA TRAVNIK d.o.o.":"",
+    {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:14},fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+     alignment:{horizontal:"center",vertical:"center"},border:bd(GREEN)});
+  r++;
+  for (let c=0;c<7;c++) sc(r,c,c===0?"NAJAVA ODVOZA OTPADA":"",
+    {font:{name:"Calibri",bold:true,color:{rgb:GOLD},sz:12},fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+     alignment:{horizontal:"center",vertical:"center"},border:bd(GREEN)});
+  r++;
+  for (let c=0;c<7;c++) sc(r,c,"",{fill:{fgColor:{rgb:LGREEN},patternType:"solid"}});
+  r++;
+
+  function metaRow(l1,v1,l2,v2) {
+    const ls={font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+              alignment:{horizontal:"left",vertical:"center",indent:1},border:bd("AAAAAA")};
+    const vs={font:{name:"Calibri",sz:9},fill:{fgColor:{rgb:YELLOW},patternType:"solid"},
+              alignment:{horizontal:"left",vertical:"center",indent:1},border:bd("AAAAAA")};
+    sc(r,0,l1,ls); sc(r,1,v1||"",vs); sc(r,2,"",vs);
+    sc(r,3,l2||"",l2?ls:vs); sc(r,4,v2||"",vs); sc(r,5,"",vs); sc(r,6,"",vs);
+    r++;
+  }
+  metaRow("Datum najave:",d.datumNajave,"Datum odvoza:",d.datumOdvoza);
+  metaRow("Kontakt osoba:",d.kontakt,"Telefon / e-mail:",d.telefon);
+  metaRow("Ovlašteni operater:",d.operater,"Lokacija preuzimanja:",d.lokacija);
+  metaRow("Napomena:",d.napomena,"","");
+  r++;
+
+  ["Rb.","Vrsta otpada","Šifra otpada","Fiz. stanje","Jed. mjere","Planirana količina","Napomena"].forEach((h,c)=>{
+    sc(r,c,h,{font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+              alignment:{horizontal:c===1||c===6?"left":"center",vertical:"center",wrapText:true},border:bd("CCCCCC")});
+  });
+  r++;
+
+  const hazFilled = filled.filter(x=>x.haz), nonHazFilled = filled.filter(x=>!x.haz);
+
+  function dataRow(item, rb, isHaz) {
+    const base = isHaz ? ORANGE : (rb%2===0?"F5F5F5":WHITE);
+    const bs = bd("CCCCCC");
+    const st=(h)=>({font:{name:"Calibri",sz:9},fill:{fgColor:{rgb:base},patternType:"solid"},
+                     alignment:{horizontal:h||"center",vertical:"center"},border:bs});
+    sc(r,0,rb,st("center"));
+    sc(r,1,item.name+(isHaz?" ⚠":""),{...st("left"),font:{name:"Calibri",sz:9,bold:isHaz,color:{rgb:isHaz?HAZRED:"000000"}}});
+    sc(r,2,item.code,st("center"));
+    sc(r,3,item.state,st("center"));
+    sc(r,4,item.unit,st("center"));
+    ws[XLSX.utils.encode_cell({r,c:5})]={v:item.qty,t:'n',
+      s:{...st("right"),font:{name:"Calibri",sz:9,bold:true,color:{rgb:isHaz?HAZRED:GREEN}}},z:"#,##0.00"};
+    sc(r,6,item.nap||"",st("left"));
+    r++;
+  }
+
+  if (hazFilled.length) {
+    for(let c=0;c<7;c++) sc(r,c,c===0?"⚠  OPASNI OTPAD":"",
+      {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},fill:{fgColor:{rgb:HAZRED},patternType:"solid"},
+       alignment:{horizontal:c===0?"left":"center",vertical:"center"},border:bd(HAZRED)});
+    r++;
+    hazFilled.forEach((item,idx)=>dataRow(item,idx+1,true));
+  }
+  if (nonHazFilled.length) {
+    for(let c=0;c<7;c++) sc(r,c,c===0?"OSTALI OTPAD":"",
+      {font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+       alignment:{horizontal:c===0?"left":"center",vertical:"center"},border:bd(GREEN2)});
+    r++;
+    nonHazFilled.forEach((item,idx)=>dataRow(item,idx+1,false));
+  }
+  r++;
+
+  const sigS={font:{name:"Calibri",bold:true,sz:9,color:{rgb:GREEN}},fill:{fgColor:{rgb:LGREEN},patternType:"solid"},
+              alignment:{horizontal:"left",vertical:"center",indent:1},border:bd("CCCCCC")};
+  const sigL={font:{name:"Calibri",sz:9,color:{rgb:"999999"}},fill:{fgColor:{rgb:WHITE},patternType:"solid"},
+              alignment:{horizontal:"center",vertical:"center"},border:bd("EEEEEE")};
+  sc(r,0,"Odgovorna osoba GS-TMT (ime i potpis):",sigS);
+  for(let c=1;c<4;c++) sc(r,c,"",sigS);
+  sc(r,4,"Datum i pečat:",sigS);
+  for(let c=5;c<7;c++) sc(r,c,"",sigS);
+  r++;
+  sc(r,0,"______________________________",sigL);
+  for(let c=1;c<4;c++) sc(r,c,"",sigL);
+  sc(r,4,"______________________________",sigL);
+  for(let c=5;c<7;c++) sc(r,c,"",sigL);
+
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:r,c:6}});
+  ws['!cols']=[{wch:5},{wch:40},{wch:13},{wch:12},{wch:8},{wch:16},{wch:30}];
+  ws['!rows']=[{hpt:28},{hpt:22},{hpt:8}];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Najava odvoza");
+  XLSX.writeFile(wb,`GS-TMT_Najava_${d.datumOdvoza||d.datumNajave||"nova"}.xlsx`);
+  toast("📊 Excel fajl preuzet!");
+}
+
+// ── Excel export – HISTORIJA ───────────────────────────────────────────────
+function izvesiHistorijuExcel() {
+  if (!historija.length) { toast("Nema podataka za izvoz!", true); return; }
+
+  const GREEN="1A4731", GREEN2="2E7D52", WHITE="FFFFFF", ORANGE="FFF3E0", HAZRED="7B1717", LGREEN="D6EAD8";
+  function bd(c){const s={style:"thin",color:{rgb:c||"CCCCCC"}};return{top:s,bottom:s,left:s,right:s};}
+
+  const ws={}; let r=0;
+  function sc(row,col,value,style){ws[XLSX.utils.encode_cell({r:row,c:col})]={v:value,t:typeof value==='number'?'n':'s',s:style};}
+
+  const titleS={font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:13},fill:{fgColor:{rgb:GREEN},patternType:"solid"},
+                alignment:{horizontal:"center",vertical:"center"},border:bd(GREEN)};
+  for(let c=0;c<10;c++) sc(r,c,c===0?"GS-TMT – Historija odvoza otpada":"",titleS);
+  r++;
+  const subS={font:{name:"Calibri",italic:true,color:{rgb:GREEN},sz:9},fill:{fgColor:{rgb:LGREEN},patternType:"solid"},
+              alignment:{horizontal:"left",vertical:"center",indent:1},border:bd("CCCCCC")};
+  for(let c=0;c<10;c++) sc(r,c,c===0?`Izvezeno: ${fmtDate(new Date().toISOString().split("T")[0])} · Ukupno unosa: ${historija.length}`:"",subS);
+  r++; r++;
+
+  const hdrs=["Rb.","Datum najave","Datum odvoza","Vrsta otpada","Šifra","Jed.","Količina","Operater","Kontakt","Napomena"];
+  const hw=[5,13,13,40,13,7,13,28,18,30];
+  hdrs.forEach((h,c)=>{
+    sc(r,c,h,{font:{name:"Calibri",bold:true,color:{rgb:WHITE},sz:9},fill:{fgColor:{rgb:GREEN2},patternType:"solid"},
+              alignment:{horizontal:c===3||c===9?"left":"center",vertical:"center",wrapText:true},border:bd(GREEN2)});
+  });
+  r++;
+
+  historija.forEach((rec,idx)=>{
+    const isHaz=rec.opasan;
+    const base=isHaz?ORANGE:(idx%2===0?"F5F5F5":"FFFFFF");
+    const bs=bd("DDDDDD");
+    const cs=(h,bold,fc)=>({font:{name:"Calibri",sz:9,bold:!!bold,color:{rgb:fc||"212121"}},
+                             fill:{fgColor:{rgb:base},patternType:"solid"},
+                             alignment:{horizontal:h||"center",vertical:"center"},border:bs});
+    sc(r,0,idx+1,cs("center"));
+    sc(r,1,rec.datumNajave||"",cs("center"));
+    sc(r,2,rec.datumOdvoza||"",cs("center"));
+    sc(r,3,rec.vrsta+(isHaz?" ⚠":""),cs("left",true,isHaz?HAZRED:"1A4731"));
+    sc(r,4,rec.sifra,cs("center",false,isHaz?HAZRED:GREEN2));
+    sc(r,5,rec.jedinica,cs("center"));
+    ws[XLSX.utils.encode_cell({r,c:6})]={v:rec.kolicina,t:'n',s:cs("right",true,isHaz?HAZRED:GREEN),z:"#,##0.00"};
+    sc(r,7,rec.operater||"—",cs("left"));
+    sc(r,8,rec.kontakt||"—",cs("left"));
+    sc(r,9,rec.napomena||"—",{...cs("left"),font:{name:"Calibri",sz:9,italic:true,color:{rgb:"666666"}}});
+    r++;
+  });
+
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:r-1,c:9}});
+  ws['!cols']=hw.map(w=>({wch:w}));
+  ws['!rows']=[{hpt:28},{hpt:16}];
+
+  const wbk=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbk,ws,"Historija");
+  XLSX.writeFile(wbk,`GS-TMT_Historija_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast("📊 Historija izvezena u Excel!");
+}
+
+function fmtDate(d) {
+  if (!d) return "—";
+  const [y,m,day] = d.split("-");
+  return `${day}.${m}.${y}`;
+}
+function fmtNum(n) {
+  return Number(n).toLocaleString("bs-BA",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toast(msg, err=false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.background = err?"#C62828":"var(--green)";
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3200);
+}
+
+load(); buildWasteTable(); initDates(); updateFilledCount();
+</script>
+</body>
+</html>
